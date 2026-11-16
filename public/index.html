@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simulador Kalshi BTC Multi-Temporalidad (15M • 1H • 4H • 1D)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --bg: #090d16;
+      --surface: #111827;
+      --surface-alt: #1e293b;
+      --card-bg: rgba(17, 24, 39, 0.88);
+      --border: rgba(255, 255, 255, 0.08);
+      --border-highlight: rgba(255, 255, 255, 0.16);
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-subtle: #64748b;
+      --primary: #3b82f6;
+      --success: #10b981;
+      --danger: #ef4444;
+      --gold: #f59e0b;
+      --purple: #8b5cf6;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 1.5rem;
+      background-image: radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.08) 0px, transparent 50%),
+                        radial-gradient(at 100% 100%, rgba(139, 92, 246, 0.06) 0px, transparent 50%);
+    }
+
+    .container {
+      max-width: 1360px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    /* Header */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1rem;
+      padding: 1.1rem 1.4rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+    }
+    .brand-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #f59e0b, #d97706);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+      color: #fff;
+      box-shadow: 0 0 16px rgba(245, 158, 11, 0.35);
+    }
+    .brand-info h1 {
+      font-size: 1.25rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+    .badge-live {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.18rem 0.55rem;
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(16, 185, 129, 0.35);
+      border-radius: 20px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--success);
+    }
+    .dot-live {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--success);
+      box-shadow: 0 0 8px var(--success);
+      animation: pulse 1.6s infinite ease-in-out;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.85); }
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+    }
+    .btn {
+      padding: 0.5rem 0.95rem;
+      border-radius: 8px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      border: 1px solid transparent;
+      transition: all 0.15s ease;
+      font-family: inherit;
+    }
+    .btn-secondary {
+      background: var(--surface-alt);
+      color: var(--text-muted);
+      border-color: var(--border);
+    }
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text);
+    }
+
+    /* Top KPI Cards */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1rem;
+    }
+    .kpi-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.15rem;
+    }
+    .kpi-title {
+      font-size: 0.76rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.4rem;
+    }
+    .kpi-value {
+      font-size: 1.75rem;
+      font-weight: 800;
+      font-family: var(--font-mono);
+    }
+    .kpi-sub {
+      margin-top: 0.35rem;
+      font-size: 0.78rem;
+      color: var(--text-subtle);
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .positive { color: var(--success); }
+    .negative { color: var(--danger); }
+
+    /* Timeframe Status Matrix */
+    .tf-section-title {
+      font-size: 1.05rem;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: -0.5rem;
+    }
+    .tf-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+      gap: 1.1rem;
+    }
+    .tf-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.9rem;
+      position: relative;
+      transition: transform 0.15s ease, border-color 0.15s ease;
+    }
+    .tf-card:hover {
+      border-color: var(--border-highlight);
+      transform: translateY(-2px);
+    }
+    .tf-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .tf-badge {
+      font-family: var(--font-mono);
+      font-weight: 800;
+      font-size: 0.82rem;
+      padding: 0.25rem 0.65rem;
+      border-radius: 6px;
+      letter-spacing: 0.02em;
+    }
+    .tf-15m { background: rgba(59, 130, 246, 0.18); border: 1px solid rgba(59, 130, 246, 0.4); color: #60a5fa; }
+    .tf-1h { background: rgba(16, 185, 129, 0.18); border: 1px solid rgba(16, 185, 129, 0.4); color: #34d399; }
+    .tf-4h { background: rgba(139, 92, 246, 0.18); border: 1px solid rgba(139, 92, 246, 0.4); color: #a78bfa; }
+    .tf-1d { background: rgba(245, 158, 11, 0.18); border: 1px solid rgba(245, 158, 11, 0.4); color: #fbbf24; }
+
+    .tf-timer {
+      font-family: var(--font-mono);
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--text-muted);
+    }
+
+    .tf-metrics {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.6rem;
+      background: var(--surface-alt);
+      padding: 0.75rem;
+      border-radius: 8px;
+    }
+    .tf-metric-item {
+      display: flex;
+      flex-direction: column;
+      gap: 0.15rem;
+    }
+    .tf-metric-label {
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      color: var(--text-subtle);
+      font-weight: 600;
+    }
+    .tf-metric-val {
+      font-family: var(--font-mono);
+      font-size: 1rem;
+      font-weight: 800;
+    }
+
+    .tf-signal-box {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.65rem 0.8rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      background: rgba(0, 0, 0, 0.2);
+    }
+    .sig-dir {
+      font-family: var(--font-mono);
+      font-weight: 800;
+      font-size: 0.88rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    /* History Table */
+    .card-table {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.25rem;
+    }
+    .card-table-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+      gap: 0.8rem;
+    }
+    .table-tabs {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: var(--surface-alt);
+      padding: 0.25rem;
+      border-radius: 8px;
+    }
+    .tab-btn {
+      padding: 0.3rem 0.75rem;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.15s ease;
+    }
+    .tab-btn.active {
+      background: var(--primary);
+      color: #fff;
+    }
+
+    .table-responsive {
+      overflow-x: auto;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.82rem;
+    }
+    th {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--text-muted);
+      padding: 0.65rem 0.8rem;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+    td {
+      padding: 0.75rem 0.8rem;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+    tr:hover td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+    .td-mono {
+      font-family: var(--font-mono);
+      font-weight: 600;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.2rem 0.55rem;
+      border-radius: 6px;
+      font-size: 0.74rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .status-won {
+      background: rgba(16, 185, 129, 0.18);
+      border: 1px solid rgba(16, 185, 129, 0.4);
+      color: var(--success);
+    }
+    .status-lost {
+      background: rgba(239, 68, 68, 0.18);
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      color: var(--danger);
+    }
+    .status-open {
+      background: rgba(245, 158, 11, 0.18);
+      border: 1px solid rgba(245, 158, 11, 0.4);
+      color: var(--gold);
+      animation: pulse 2s infinite;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+
+    <!-- Header -->
+    <header>
+      <div class="brand">
+        <div class="brand-icon">
+          <i class="fa-brands fa-bitcoin"></i>
+        </div>
+        <div class="brand-info">
+          <h1>
+            Simulador Kalshi BTC Multi-Temporalidad
+            <span class="badge-live"><span class="dot-live"></span> 24/7 EN VIVO</span>
+          </h1>
+          <p style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.15rem;">
+            Ejecución cuantitativa autónoma de 5 acciones en ventanas de <strong>15M, 1H, 4H y Diario</strong> con comisiones reales de Kalshi.
+          </p>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <div style="text-align: right; margin-right: 0.5rem;">
+          <div style="font-size: 0.68rem; color: var(--text-subtle); text-transform: uppercase;">Precio Spot BTC</div>
+          <div id="header-btc-spot" style="font-family: var(--font-mono); font-size: 1.25rem; font-weight: 800; color: #fff;">$0.00</div>
+        </div>
+        <button id="btn-reset" class="btn btn-secondary" title="Reiniciar simulación a $200.00 USD">
+          <i class="fa-solid fa-rotate-left"></i> Reiniciar
+        </button>
+      </div>
+    </header>
+
+    <!-- Top KPIs -->
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-title">
+          <span>Saldo Total Simulado</span>
+          <i class="fa-solid fa-wallet"></i>
+        </div>
+        <div class="kpi-value" id="kpi-bankroll">$200.00</div>
+        <div class="kpi-sub">
+          <span>PnL Global:</span>
+          <strong id="kpi-pnl" class="positive">+$0.00 (+0.0%)</strong>
+        </div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-title">
+          <span>Win Rate Global</span>
+          <i class="fa-solid fa-bullseye"></i>
+        </div>
+        <div class="kpi-value" id="kpi-winrate">0.0%</div>
+        <div class="kpi-sub">
+          <span id="kpi-counts">0 ganadas / 0 perdidas</span>
+        </div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-title">
+          <span>Operaciones Globales</span>
+          <i class="fa-solid fa-layer-group"></i>
+        </div>
+        <div class="kpi-value" id="kpi-total-trades">0</div>
+        <div class="kpi-sub">
+          <span id="kpi-open-trades">0 en curso</span>
+        </div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-title">
+          <span>Tamaño de Orden</span>
+          <i class="fa-solid fa-coins"></i>
+        </div>
+        <div class="kpi-value">5 Acciones</div>
+        <div class="kpi-sub">
+          <span>En cada temporalidad (Fee CFTC incluido)</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Timeframes Status Matrix -->
+    <div class="tf-section-title">
+      <i class="fa-solid fa-chart-simple" style="color: #60a5fa;"></i> Estado y Rendimiento por Temporalidad
+    </div>
+
+    <div class="tf-grid">
+      <!-- 15M -->
+      <div class="tf-card" id="card-tf-15M">
+        <div class="tf-card-header">
+          <span class="tf-badge tf-15m"><i class="fa-solid fa-clock"></i> 15 MINUTOS (15M)</span>
+          <span class="tf-timer" id="timer-15M">--:--</span>
+        </div>
+        <div class="tf-metrics">
+          <div class="tf-metric-item">
+            <span class="tf-metric-label">Win Rate</span>
+            <span class="tf-metric-val" id="wr-15M">0.0%</span>
+          </div>
+          <div class="tf-metric-item">
+            <span class="tf-metric-label">PnL Neto</span>
+            <span class="tf-metric-val" id="pnl-15M">$0.00</span>
+          </div>
+          <div class="tf-metric-item">
+            <span class="tf-metric-label">Ganadas / Perd.</span>
+            <span class="tf-metric-val" id="ratio-15M" style="font-size:0.85rem;">0 / 0</span>
+          </div>
+          <div class="tf-metric-item">
+            <span class="tf-metric-label">En Curso</span>
+            <span class="tf-metric-val" id="open-15M" style="font-size:0.85rem; color:var(--gold);">0</span>
+          </div>
+        </div>
+        <div class="tf-signal-box">
+          <span style="font-size:0.7rem; color:var(--text-muted); text-transform:uppercase;">Última Señal:</span>
+          <span class="sig-dir" id="sig-15M">--</span>
+        </div>
+      </div>
+
+      <!-- 1H -->
+      <div class="tf-card" id="card-tf-1H">
+        <div class="tf-card-header">
+          <span class="tf-badge tf-1h"><i class="fa-solid fa-hourglass-half"></i> 1 HORA (1H)</span>
+          <span class="tf-timer" id="timer-1H">--:--</span>
+        </div>
+        <div class="tf-metrics">
+          <div class="tf-metric-item">
+            <span class="tf-metric-label">Win Rate</span>
+            <span class="tf-metric-val" id="wr-1H">0.0%</span>
+          </div>
+          <div class="tf-metric-item">
+            <span class="tf-metric-label">PnL Neto</span>
+            <span class="tf-metric-val" id="pnl-1H">$0.00</span>
+          </div>
+          <div class="tf-metric-item">
+            <span class="tf-metric-label">Ganadas / Perd.</span>
+            <span class="tf-metric-val" id="ratio-1H" style="font-size:0.85rem;">0 / 0</span>
+          </div>
+          <div class="tf-metric-item">
+            <span class="tf-metric-label">En Curso</span>
+            <span class="tf-metric-val" id="open-1H" style="font-size:0.85rem; color:var(--gold);">0</span>
+          </div>
+        </div>
+        <div class="tf-signal-box">
+          <span style="font-size:0.7rem; color:var(--text-muted); text-transform:uppercase;">Última Señal:</span>
+          <span class="sig-dir" id="sig-1H">--</span>
+        </div>
+      </div>
+
+      <!-- 4H -->
+      <div class="tf-card" id="card-tf-4H">
+        <div class="tf-card-header">
+          <span class="tf-badge tf-4h"><i class="fa-solid fa-cubes"></i> 4 HORAS (4H)</span>
+          <span class="tf-timer" id="timer-4H">--:--</span>
+        </div>
+        <div class="tf-metrics">
+          <div class="tf-metric-item">
+            <span class="tf-metric-label">Win Rate</span>
+            <span class="tf-metric-val" id="wr-4H">0.0%</span>
+          </div>
+          <div class="tf-metric-item">
+            <span class="tf-metric-label">PnL Neto</span>
+            <span class="tf-metric-val" id="pnl-4H">$0.00</span>
+          </div>
+          <div class="tf-metric-item">
+            <span class="tf-metric-label">Ganadas / Perd.</span>
+            <span class="tf-metric-val" id="ratio-4H" style="font-size:0.85rem;">0 / 0</span>
+          </div>
+          <div class="tf-metric-item">
+            <span class="tf-metric-label">En Curso</span>
+            <span class="tf-metric-val" id="open-4H" style="font-size:0.85rem; color:var(--gold);">0</span>
+          </div>
+        </div>
+        <div class="tf-signal-box">
+          <span style="font-size:0.7rem; color:var(--text-muted); text-transform:uppercase;">Última Señal:</span>
+          <span class="sig-dir" id="sig-4H">--</span>
+        </div>
+      </div>
+
+      <!-- 1D -->
+      <div class="tf-card" id="card-tf-1D">
+        <div class="tf-card-header">
+          <span class="tf-badge tf-1d"><i class="fa-solid fa-calendar-day"></i> DIARIO (1D)</span>
+          <span class="tf-timer" id="timer-1D">--:--</span>
+        </div>
+        <div class="tf-metrics">
+          <div class="tf-metric-item">
+            <span class="tf-metric-label">Win Rate</span>
+            <span class="tf-metric-val" id="wr-1D">0.0%</span>
+          </div>
+          <div class="tf-metric-item">
+            <span class="tf-metric-label">PnL Neto</span>
+            <span class="tf-metric-val" id="pnl-1D">$0.00</span>
+          </div>
+          <div class="tf-metric-item">
+            <span class="tf-metric-label">Ganadas / Perd.</span>
+            <span class="tf-metric-val" id="ratio-1D" style="font-size:0.85rem;">0 / 0</span>
+          </div>
+          <div class="tf-metric-item">
+            <span class="tf-metric-label">En Curso</span>
+            <span class="tf-metric-val" id="open-1D" style="font-size:0.85rem; color:var(--gold);">0</span>
+          </div>
+        </div>
+        <div class="tf-signal-box">
+          <span style="font-size:0.7rem; color:var(--text-muted); text-transform:uppercase;">Última Señal:</span>
+          <span class="sig-dir" id="sig-1D">--</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Trades Table -->
+    <div class="card-table">
+      <div class="card-table-header">
+        <h2><i class="fa-solid fa-clock-rotate-left"></i> Historial Multi-Día de Operaciones</h2>
+        <div class="table-tabs">
+          <button class="tab-btn active" data-tf="ALL">Todas</button>
+          <button class="tab-btn" data-tf="15M">15M</button>
+          <button class="tab-btn" data-tf="1H">1H</button>
+          <button class="tab-btn" data-tf="4H">4H</button>
+          <button class="tab-btn" data-tf="1D">1D</button>
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th>Hora</th>
+              <th>Temporalidad</th>
+              <th>Mercado / Ciclo</th>
+              <th>Decisión</th>
+              <th>Strike Target</th>
+              <th>Precio Entrada</th>
+              <th>Total Invertido</th>
+              <th>Resultado</th>
+              <th>Ganancia Neta</th>
+              <th>Razón Técnica</th>
+            </tr>
+          </thead>
+          <tbody id="trades-table-body">
+            <tr>
+              <td colspan="10" style="text-align: center; color: var(--text-muted); padding: 2rem;">
+                Cargando historial de operaciones...
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    let activeTab = 'ALL';
+
+    function formatSeconds(secs) {
+      if (secs <= 0) return '00:00';
+      const h = Math.floor(secs / 3600);
+      const m = Math.floor((secs % 3600) / 60);
+      const s = secs % 60;
+      if (h > 0) return `${h}h ${String(m).padStart(2, '0')}m`;
+      return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+    }
+
+    async function updateDashboard() {
+      try {
+        const res = await fetch('/api/status');
+        const data = await res.json();
+        if (!data.success) return;
+
+        // Header & Spot
+        document.getElementById('header-btc-spot').textContent = `$${data.btcSpot.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+        // Global KPIs
+        document.getElementById('kpi-bankroll').textContent = `$${data.bankroll.toFixed(2)}`;
+        const pnlEl = document.getElementById('kpi-pnl');
+        const sign = data.globalNetPnl >= 0 ? '+' : '';
+        pnlEl.textContent = `${sign}$${data.globalNetPnl.toFixed(2)} (${sign}${data.globalRoi}%)`;
+        pnlEl.className = data.globalNetPnl >= 0 ? 'positive' : 'negative';
+
+        document.getElementById('kpi-winrate').textContent = `${data.globalWinRate}%`;
+        document.getElementById('kpi-counts').textContent = `${data.settledCount} cerradas (WR: ${data.globalWinRate}%)`;
+        document.getElementById('kpi-total-trades').textContent = data.totalTrades;
+        document.getElementById('kpi-open-trades').textContent = `${data.openCount} activas en curso`;
+
+        // Update each Timeframe Card
+        ['15M', '1H', '4H', '1D'].forEach(tf => {
+          const stats = data.timeframes[tf];
+          if (!stats) return;
+
+          document.getElementById(`timer-${tf}`).textContent = formatSeconds(stats.secondsLeft);
+          document.getElementById(`wr-${tf}`).textContent = `${stats.winRate}%`;
+
+          const pnlVal = document.getElementById(`pnl-${tf}`);
+          const s = stats.netPnl >= 0 ? '+' : '';
+          pnlVal.textContent = `${s}$${stats.netPnl.toFixed(2)}`;
+          pnlVal.style.color = stats.netPnl >= 0 ? 'var(--success)' : 'var(--danger)';
+
+          document.getElementById(`ratio-${tf}`).textContent = `${stats.won} / ${stats.lost}`;
+          document.getElementById(`open-${tf}`).textContent = stats.open;
+
+          const sigEl = document.getElementById(`sig-${tf}`);
+          if (stats.lastSignal) {
+            const isUp = stats.lastSignal.decision === 'UP';
+            sigEl.style.color = isUp ? 'var(--success)' : 'var(--danger)';
+            sigEl.innerHTML = isUp
+              ? `<i class="fa-solid fa-arrow-trend-up"></i> UP (${stats.lastSignal.confidence}%)`
+              : `<i class="fa-solid fa-arrow-trend-down"></i> DOWN (${stats.lastSignal.confidence}%)`;
+          } else {
+            sigEl.textContent = 'En espera de señal';
+            sigEl.style.color = 'var(--text-muted)';
+          }
+        });
+
+        // Load trades
+        await loadTradesTable();
+      } catch (err) {
+        console.error('Error actualizando dashboard:', err);
+      }
+    }
+
+    async function loadTradesTable() {
+      try {
+        const url = activeTab === 'ALL' ? '/api/trades' : `/api/trades?timeframe=${activeTab}`;
+        const res = await fetch(url);
+        const data = await res.json();
+        if (!data.success) return;
+
+        const tbody = document.getElementById('trades-table-body');
+        const trades = data.trades || [];
+
+        if (trades.length === 0) {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="10" style="text-align: center; color: var(--text-muted); padding: 2rem;">
+                No hay operaciones registradas en esta vista temporal.
+              </td>
+            </tr>
+          `;
+          return;
+        }
+
+        tbody.innerHTML = trades.map(t => {
+          const timeStr = new Date(t.executedAt).toLocaleTimeString();
+          const decisionBadge = t.decision === 'UP'
+            ? '<span style="color: var(--success); font-weight:700;"><i class="fa-solid fa-arrow-trend-up"></i> UP (SÍ)</span>'
+            : '<span style="color: var(--danger); font-weight:700;"><i class="fa-solid fa-arrow-trend-down"></i> DOWN (NO)</span>';
+
+          const tfClass = t.timeframe === '15M' ? 'tf-15m' : t.timeframe === '1H' ? 'tf-1h' : t.timeframe === '4H' ? 'tf-4h' : 'tf-1d';
+          const tfBadge = `<span class="tf-badge ${tfClass}" style="font-size:0.7rem; padding:0.15rem 0.45rem;">${t.timeframe}</span>`;
+
+          let statusBadge = '<span class="status-badge status-open"><i class="fa-solid fa-spinner fa-spin"></i> En Curso</span>';
+          let profitHtml = '<span style="color: var(--text-muted);">-</span>';
+
+          if (t.status === 'WON') {
+            statusBadge = '<span class="status-badge status-won"><i class="fa-solid fa-circle-check"></i> GANADA</span>';
+            profitHtml = `<strong class="positive td-mono">+$${t.netProfit.toFixed(2)} USD</strong>`;
+          } else if (t.status === 'LOST') {
+            statusBadge = '<span class="status-badge status-lost"><i class="fa-solid fa-circle-xmark"></i> PERDIDA</span>';
+            profitHtml = `<strong class="negative td-mono">-$${Math.abs(t.netProfit).toFixed(2)} USD</strong>`;
+          }
+
+          return `
+            <tr>
+              <td class="td-mono">${timeStr}</td>
+              <td>${tfBadge}</td>
+              <td class="td-mono" style="font-size:0.75rem; color:var(--text-muted);">${t.ticker}</td>
+              <td>${decisionBadge}</td>
+              <td class="td-mono">$${t.strike ? t.strike.toLocaleString() : '-'}</td>
+              <td class="td-mono">${(t.pricePerShare * 100).toFixed(1)}¢</td>
+              <td class="td-mono">$${t.totalInvested.toFixed(2)}</td>
+              <td>${statusBadge}</td>
+              <td>${profitHtml}</td>
+              <td style="max-width: 260px; font-size: 0.74rem; color: var(--text-muted);">${t.reasoning || '-'}</td>
+            </tr>
+          `;
+        }).join('');
+      } catch (err) {}
+    }
+
+    // Tabs filter
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        activeTab = btn.dataset.tf;
+        loadTradesTable();
+      });
+    });
+
+    // Reset button
+    document.getElementById('btn-reset').addEventListener('click', async () => {
+      if (!confirm('¿Deseas reiniciar la simulación a $200.00 USD y borrar el historial de pruebas?')) return;
+      await fetch('/api/reset', { method: 'POST' });
+      await updateDashboard();
+    });
+
+    updateDashboard();
+    setInterval(updateDashboard, 3000);
+  </script>
+</body>
+</html>

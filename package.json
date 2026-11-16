@@ -1,0 +1,12 @@
+{
+  "name": "kalshi-btc-simulator",
+  "version": "2.0.0",
+  "description": "Simulador Cuantitativo Multi-Temporalidad Kalshi BTC (15M, 1H, 4H, 1D)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": ["kalshi", "bitcoin", "trading", "simulator"],
+  "author": "",
+  "license": "ISC"
+}
