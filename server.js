@@ -736,4 +736,24 @@ server.listen(PORT, () => {
   console.log(`🌐 Panel Web interactivo: http://localhost:${PORT}`);
   console.log(`📊 Activos: BTC, ETH, SOL | Temporalidades: 15M, 1H, 4H, 1D`);
   console.log('================================================================');
+
+  // ============================================================================
+  // KEEP-ALIVE PINGER (Evita que Render entre en modo reposo cada 15 min)
+  // ============================================================================
+  const RENDER_EXTERNAL_URL = process.env.RENDER_EXTERNAL_URL || 'https://kalshi-btc-simulator.onrender.com';
+  setInterval(() => {
+    try {
+      const pingUrl = `${RENDER_EXTERNAL_URL}/api/status`;
+      https.get(pingUrl, (res) => {
+        res.on('data', () => {});
+        res.on('end', () => {
+          console.log(`[Keep-Alive] 💓 Ping a ${pingUrl} (HTTP ${res.statusCode}) - ${new Date().toLocaleTimeString('es-ES')}`);
+        });
+      }).on('error', (err) => {
+        console.warn(`[Keep-Alive] Error en ping: ${err.message}`);
+      });
+    } catch (e) {
+      console.warn(`[Keep-Alive] Excepción: ${e.message}`);
+    }
+  }, 4 * 60 * 1000); // Cada 4 minutos
 });
